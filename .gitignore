@@ -41,4 +41,4 @@ out/
 /media-files/
 /logs/
 /tdlight-session/
-/frontend/
+/frontend/node_modules/
