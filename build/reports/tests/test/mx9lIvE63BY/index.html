@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - com.example.tdlighttelegram.TdLightTelegramApplicationTests</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<div class="breadcrumbs">
+<a class="breadcrumb" href="../index.html">all</a> &gt; 
+<span class="breadcrumb">com.example.tdlighttelegram.TdLightTelegramApplicationTests</span>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>TdLightTelegramApplicationTests</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+<li>
+<a class="" href="#">standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>skipped</p>
+</div>
+</td>
+<td>
+<div class="infoBox duration">
+<div class="counter">5.133s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<table class="test-results">
+<thead>
+<tr>
+<th>Child</th>
+<th hidden="">Name</th>
+<th>Tests</th>
+<th>Failures</th>
+<th>Skipped</th>
+<th>Duration</th>
+<th>Success rate</th>
+</tr>
+</thead>
+<tr>
+<td class="success">
+<a href="f9ZdqPj7kYc.html">contextLoads()</a>
+</td>
+<td class="path" hidden="">contextLoads()</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0.549s</td>
+<td class="success">100%</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="tab">
+<h2>standard output</h2>
+<span class="code">
+<pre id="root-0-test-stdout-com.example.tdlighttelegram.TdLightTelegramApplicationTests">20:39:54.707 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.tdlighttelegram.TdLightTelegramApplicationTests]: TdLightTelegramApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+20:39:54.814 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.tdlighttelegram.TdLightTelegramApplication for test class com.example.tdlighttelegram.TdLightTelegramApplicationTests
+20:39:54.911 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.tdlighttelegram.TdLightTelegramApplicationTests]: TdLightTelegramApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+20:39:54.912 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.tdlighttelegram.TdLightTelegramApplication for test class com.example.tdlighttelegram.TdLightTelegramApplicationTests
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-04-28 20:39:55.288 [Test worker] INFO  c.e.t.TdLightTelegramApplicationTests - Starting TdLightTelegramApplicationTests using Java 21.0.9 with PID 19700 (started by kongm in D:\APD Backend Work\Td-Light-Telegram)
+2026-04-28 20:39:55.289 [Test worker] DEBUG c.e.t.TdLightTelegramApplicationTests - Running with Spring Boot v4.0.6, Spring v7.0.7
+2026-04-28 20:39:55.289 [Test worker] INFO  c.e.t.TdLightTelegramApplicationTests - The following 1 profile is active: &quot;dev&quot;
+2026-04-28 20:39:57.021 [Test worker] INFO  c.e.t.config.TelegramConfig - TDLight initialized successfully
+2026-04-28 20:39:57.194 [Test worker] INFO  c.e.t.service.TelegramService - Initializing Telegram client...
+2026-04-28 20:39:57.229 [Test worker] DEBUG c.e.t.s.s.TelegramClientProvider - Telegram client instance set
+2026-04-28 20:39:57.230 [Test worker] INFO  c.e.t.service.TelegramService - Telegram client initialized successfully - waiting for phone number via API
+2026-04-28 20:39:57.230 [Test worker] INFO  c.e.t.service.TelegramService - Please use POST /api/telegram/auth/phone to submit phone number
+2026-04-28 20:39:57.357 [TDLib thread] INFO  c.e.t.handler.UpdateHandler - Waiting for phone number...
+2026-04-28 20:39:57.357 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: WAITING_FOR_PHONE
+2026-04-28 20:39:57.358 [TDLib thread] WARN  i.t.client.SimpleTelegramClient - Unhandled exception!
+it.tdlight.client.TelegramError: 400: Phone number must be non-empty
+	at it.tdlight.client.AuthorizationStateWaitAuthenticationDataHandler.lambda$onAuthData$3(AuthorizationStateWaitAuthenticationDataHandler.java:66)
+	at it.tdlight.InternalClient.handleResponse(InternalClient.java:99)
+	at it.tdlight.InternalClient.handleEvent(InternalClient.java:117)
+	at it.tdlight.InternalClient.handleEvents(InternalClient.java:71)
+	at it.tdlight.ClientFactoryImpl.handleClientEvents(ClientFactoryImpl.java:87)
+	at it.tdlight.ResponseReceiver.run(ResponseReceiver.java:113)
+2026-04-28 20:39:58.847 [Test worker] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 4 endpoints beneath base path '/actuator'
+2026-04-28 20:39:58.942 [Test worker] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2026-04-28 20:39:58.943 [Test worker] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@7ca0b05e]]
+2026-04-28 20:39:58.945 [Test worker] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2026-04-28 20:39:58.955 [Test worker] INFO  c.e.t.TdLightTelegramApplicationTests - Started TdLightTelegramApplicationTests in 3.996 seconds (process running for 5.377)
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-com.example.tdlighttelegram.TdLightTelegramApplicationTests">Copy</button>
+</span>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.4.1</a> at Apr 28, 2026, 8:40:01 PM</p>
+</div>
+</div>
+</body>
+</html>

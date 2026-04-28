@@ -1,0 +1,90 @@
+# Docker environment configuration
+spring:
+  application:
+    name: tdlight-pro
+  main:
+    allow-circular-references: false
+
+server:
+  port: 8082
+
+# Telegram configuration (same as default)
+telegram:
+  api-id: ${TELEGRAM_API_ID:34701940}
+  api-hash: ${TELEGRAM_API_HASH:e7ed4d55e0bccab37b69c02eb6c7ca9f}
+  phone-number: ${TELEGRAM_PHONE:+85589826578}
+  use-test-datacenter: false
+  session-path: /app/tdlight-session
+  database-path: /app/tdlight-data
+  downloads-path: /app/tdlight-downloads
+  system-language-code: zh-CN
+  device-model: Desktop
+  system-version: Linux
+  application-version: 1.0.0
+  enable-storage-optimizer: true
+  ignore-file-names: false
+
+  group-management:
+    member-fetch:
+      batch-size: 200
+      max-retries: 3
+      retry-delay-ms: 1000
+    member-filter:
+      exclude-bots: true
+      exclude-deleted: true
+      active-days-threshold: 30
+      recently-days-threshold: 7
+    invite:
+      batch-size: 10
+      delay-between-invites-ms: 500
+      max-concurrent-invites: 5
+      timeout-seconds: 120
+    cache:
+      member-cache-ttl-minutes: 30
+      invite-result-cache-ttl-hours: 24
+
+# MinIO configuration
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://minio:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+  buckets:
+    files: telegram-files
+    videos: telegram-videos
+    voices: telegram-voices
+    thumbnails: telegram-thumbnails
+  # Upload configuration
+  upload:
+    max-file-size: 100MB
+    allowed-extensions: .jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.ogg,.opus,.mp3,.m4a,.aac,.wav,.flac,.pdf,.doc,.docx
+  # Download configuration
+  download:
+    url-expiry-seconds: 3600  # 1 hour
+
+# Logging configuration
+logging:
+  level:
+    com.yingqiang.tdlight: INFO
+    it.tdlight: WARN
+    org.springframework: INFO
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/tdlight-pro.log
+    max-size: 10MB
+    max-history: 30
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
