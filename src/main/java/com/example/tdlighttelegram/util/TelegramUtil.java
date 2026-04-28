@@ -101,8 +101,9 @@ public class TelegramUtil {
                 Long chatId = download.getChatId();
 
                 // Update thumbnail path in message history
-                telegramCacheManager.getMessageHistory().stream()
-                        .filter(msg -> messageId.equals(msg.getId()) && chatId.equals(msg.getChatId()))
+                List<MessageInfo> chatMessages = telegramCacheManager.getMessageHistory(chatId);
+                chatMessages.stream()
+                        .filter(msg -> messageId.equals(msg.getId()))
                         .findFirst()
                         .ifPresent(msg -> {
                             msg.setThumbnailLocalPath(localPath);

@@ -23,7 +23,7 @@ import { chatApi, messageApi } from '@/services/api'
 import { useStore } from '@/store/useStore'
 import { useChatsSubscription, useChatSubscription, useTypingIndicator } from '@/hooks/useWebSocket'
 import toast from 'react-hot-toast'
-import type { Message, ChatListItem } from '@/types'
+import type { Message, ChatListItem, Chat } from '@/types'
 
 // Import new components
 import MessageReply from '@/components/MessageReply'
@@ -48,6 +48,7 @@ export default function ChatPage() {
   
   // Message pagination state (Telegram-style with fromMessageId cursor)
   const [allMessages, setAllMessages] = useState<Message[]>([])
+  const [chatProfile, setChatProfile] = useState<Chat | null>(null)
   const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false)
   const [isLoadingNewerMessages, setIsLoadingNewerMessages] = useState(false)
   const [hasMoreOlderMessages, setHasMoreOlderMessages] = useState(true)
@@ -250,10 +251,14 @@ export default function ChatPage() {
   const { data: rawMessages, isLoading: messagesLoading } = useQuery({
     queryKey: ['messages', chatId, 'initial'],
     queryFn: async () => {
-      if (!chatId) return []
+      if (!chatId) return { messages: [], profile: null }
       // Load initial 25 messages (no fromMessageId = get latest)
       const response = await messageApi.getMessageHistoryByChatId(Number(chatId), 25)
-      return response.data
+      // Store profile in state
+      if (response.data.profile) {
+        setChatProfile(response.data.profile)
+      }
+      return { messages: response.data.messages, profile: response.data.profile }
     },
     enabled: !!chatId && !initialLoadComplete,
   })
@@ -262,22 +267,21 @@ export default function ChatPage() {
   useEffect(() => {
     console.log('[INIT] Raw messages received:', {
       hasRawMessages: !!rawMessages,
-      rawMessagesLength: rawMessages?.length || 0,
+      rawMessagesLength: rawMessages?.messages?.length || 0,
       initialLoadComplete
     })
     
-    if (rawMessages && rawMessages.length > 0 && !initialLoadComplete) {
+    if (rawMessages && rawMessages.messages && rawMessages.messages.length > 0 && !initialLoadComplete) {
       // Sort messages in chronological order (oldest first, newest last)
-      const sorted = [...rawMessages].sort((a, b) => {
+      const sorted = [...rawMessages.messages].sort((a, b) => {
         const dateA = new Date(a.messageDate).getTime()
         const dateB = new Date(b.messageDate).getTime()
         return dateA - dateB
       })
       
-      // ALWAYS set hasMoreOlderMessages to true initially
-      // Let the first loadOlderMessages call determine if there are actually more
-      // This ensures pagination works even if initial load returns any number of messages
-      const mightHaveMore = true
+      // If we got the full requested amount (25), there might be more older messages
+      // If we got less, we're probably at the beginning of the chat
+      const mightHaveMore = sorted.length >= 25
       
       console.log('[INIT] Setting initial state:', {
         sortedLength: sorted.length,
@@ -285,7 +289,8 @@ export default function ChatPage() {
         newestMessageId: sorted[sorted.length - 1].id,
         hasMoreOlderMessages: mightHaveMore,
         hasMoreNewerMessages: false,
-        reasoning: 'Always TRUE initially - let API tell us if no more'
+        hasProfile: !!rawMessages.profile,
+        reasoning: sorted.length >= 25 ? 'Got full batch - might have more' : 'Got partial batch - probably at beginning'
       })
       
       setAllMessages(sorted)
@@ -309,6 +314,7 @@ export default function ChatPage() {
       console.log('[RESET] Resetting all pagination state...')
       
       setAllMessages([])
+      setChatProfile(null)
       setHasMoreOlderMessages(true)
       setHasMoreNewerMessages(false)
       setOldestMessageId(null)
@@ -370,15 +376,21 @@ export default function ChatPage() {
         oldestMessageId // This is the pagination cursor
       )
       
+      // Update profile if returned
+      if (response.data.profile && !chatProfile) {
+        setChatProfile(response.data.profile)
+      }
+      
       console.log('[loadOlderMessages] Response:', {
-        messageCount: response.data?.length || 0,
-        firstMessageId: response.data?.[0]?.id,
-        lastMessageId: response.data?.[response.data.length - 1]?.id
+        messageCount: response.data.messages?.length || 0,
+        firstMessageId: response.data.messages?.[0]?.id,
+        lastMessageId: response.data.messages?.[response.data.messages.length - 1]?.id,
+        hasProfile: !!response.data.profile
       })
       
-      if (response.data && response.data.length > 0) {
+      if (response.data.messages && response.data.messages.length > 0) {
         // Sort new messages
-        const sorted = [...response.data].sort((a, b) => {
+        const sorted = [...response.data.messages].sort((a, b) => {
           const dateA = new Date(a.messageDate).getTime()
           const dateB = new Date(b.messageDate).getTime()
           return dateA - dateB
@@ -387,7 +399,8 @@ export default function ChatPage() {
         console.log('[loadOlderMessages] Sorted messages:', {
           count: sorted.length,
           oldestId: sorted[0].id,
-          newestId: sorted[sorted.length - 1].id
+          newestId: sorted[sorted.length - 1].id,
+          requestedLimit: 25
         })
         
         // Prepend older messages, filtering out duplicates
@@ -406,19 +419,20 @@ export default function ChatPage() {
         
         setOldestMessageId(sorted[0].id) // Update to new oldest
         
-        // IMPORTANT: Don't set hasMoreOlderMessages to false just because we got < 100
-        // Only set it to false when we get 0 messages
-        // There might be more messages even if this batch was small
-        console.log('[loadOlderMessages] ✅ Loaded', sorted.length, 'messages. Keeping hasMoreOlderMessages = true')
+        // Check if there are more messages: if we got fewer than requested, we're at the end
+        const hasMore = sorted.length >= 25
+        setHasMoreOlderMessages(hasMore)
+        
+        console.log('[loadOlderMessages] ✅ Loaded', sorted.length, 'messages. hasMoreOlderMessages =', hasMore)
         
         // If we loaded older messages, there might be newer ones now
         if (!hasMoreNewerMessages && sorted.length > 0) {
           setHasMoreNewerMessages(true)
         }
       } else {
-        // Only set to false when we get ZERO messages
+        // No messages returned - we're at the beginning of the chat
         setHasMoreOlderMessages(false)
-        console.log('[loadOlderMessages] ❌ No messages returned - no more older messages')
+        console.log('[loadOlderMessages] ❌ No messages returned - reached beginning of chat')
       }
     } catch (error) {
       console.error('[loadOlderMessages] Failed:', error)
@@ -439,9 +453,9 @@ export default function ChatPage() {
         25
       )
       
-      if (response.data && response.data.length > 0) {
+      if (response.data.messages && response.data.messages.length > 0) {
         // Sort messages in chronological order
-        const sorted = [...response.data].sort((a, b) => {
+        const sorted = [...response.data.messages].sort((a, b) => {
           const dateA = new Date(a.messageDate).getTime()
           const dateB = new Date(b.messageDate).getTime()
           return dateA - dateB
@@ -1121,18 +1135,26 @@ export default function ChatPage() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
-                  {selectedChat.title.charAt(0).toUpperCase()}
-                </div>
+                {chatProfile?.photoUrl ? (
+                  <img 
+                    src={chatProfile.photoUrl} 
+                    alt={chatProfile.title}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
+                    {(chatProfile?.title || selectedChat.title).charAt(0).toUpperCase()}
+                  </div>
+                )}
                 {/* Online status for private chats */}
-                {selectedChat.type === 'PRIVATE' && (
+                {(chatProfile?.type || selectedChat.type) === 'PRIVATE' && (
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
                 )}
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">{selectedChat.title}</h2>
+                <h2 className="font-semibold text-gray-900">{chatProfile?.title || selectedChat.title}</h2>
                 <p className="text-sm text-gray-500">
-                  {selectedChat.memberCount ? `${selectedChat.memberCount} members` : 'Private chat'}
+                  {(chatProfile?.memberCount || selectedChat.memberCount) ? `${chatProfile?.memberCount || selectedChat.memberCount} members` : 'Private chat'}
                 </p>
               </div>
             </div>
@@ -1209,7 +1231,24 @@ export default function ChatPage() {
                           </span>
                         </div>
                       )}
-                      <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                        {/* User avatar for incoming messages */}
+                        {!isOwnMessage && (
+                          <div className="flex-shrink-0">
+                            {message.senderPhotoUrl ? (
+                              <img 
+                                src={message.senderPhotoUrl} 
+                                alt={message.senderName || 'User'}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">
+                                {(message.senderName || 'U').charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
                         <div
                           onContextMenu={(e) => handleContextMenu(e, message)}
                           className={`max-w-md px-4 py-2 rounded-2xl ${
@@ -1239,7 +1278,7 @@ export default function ChatPage() {
                           {message.messageType === 'VIDEO' && (
                             <div className={`${isOwnMessage ? 'bg-blue-500' : 'bg-white'} rounded-2xl overflow-hidden`}>
                               {message.minioPresignedUrl ? (
-                                <div className="relative group">
+                                <div className="relative">
                                   <video 
                                     controls 
                                     className="w-full max-w-md"
@@ -1252,16 +1291,6 @@ export default function ChatPage() {
                                     <source src={message.minioPresignedUrl} type="video/webm" />
                                     Your browser does not support the video tag.
                                   </video>
-                                  {/* Download button overlay */}
-                                  <button
-                                    onClick={() => handleDownload(message.minioPresignedUrl!, message.fileName || 'video.mp4')}
-                                    className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Download video"
-                                  >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                  </button>
                                   {message.content && message.content !== message.fileName && (
                                     <div className={`px-3 py-2 ${isOwnMessage ? 'text-white' : 'text-gray-900'}`}>
                                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -1303,63 +1332,38 @@ export default function ChatPage() {
                           
                           {message.messageType === 'PHOTO' && (
                             <div className={`${isOwnMessage ? 'bg-blue-500' : 'bg-white'} rounded-2xl overflow-hidden`}>
-                              {message.minioPresignedUrl ? (
-                                <div className="relative group">
-                                  <img 
-                                    src={message.minioPresignedUrl} 
-                                    alt="Photo"
-                                    className="w-full cursor-pointer hover:opacity-90 transition-opacity"
-                                    style={{ maxWidth: '400px', maxHeight: '400px', objectFit: 'cover' }}
-                                    onClick={() => handleImageClick(message)}
-                                  />
-                                  {/* Download button overlay */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleDownload(message.minioPresignedUrl!, message.fileName || 'photo.jpg')
-                                    }}
-                                    className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Download photo"
-                                  >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                  </button>
-                                  {message.content && (
-                                    <div className={`px-3 py-2 ${isOwnMessage ? 'text-white' : 'text-gray-900'}`}>
-                                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="px-4 py-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                      isOwnMessage ? 'bg-white/20' : 'bg-blue-100'
-                                    }`}>
-                                      <span className="text-2xl">📷</span>
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-sm font-medium">Photo</p>
-                                      {message.fileSize && (
-                                        <p className="text-xs opacity-75">
-                                          {(message.fileSize / 1024).toFixed(0)} KB
-                                        </p>
-                                      )}
-                                    </div>
+                              <div className="relative">
+                                <img 
+                                  src={message.minioPresignedUrl || message.thumbnailMinioPresignedUrl} 
+                                  alt="Photo"
+                                  className="w-full cursor-pointer hover:opacity-90 transition-opacity"
+                                  style={{ maxWidth: '400px', maxHeight: '400px', objectFit: 'cover' }}
+                                  onClick={() => handleImageClick(message)}
+                                />
+                                {message.content && (
+                                  <div className={`px-3 py-2 ${isOwnMessage ? 'text-white' : 'text-gray-900'}`}>
+                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                                   </div>
-                                  {message.content && (
-                                    <p className="text-sm mt-2 whitespace-pre-wrap">{message.content}</p>
-                                  )}
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                           )}
                           
                           {message.messageType === 'DOCUMENT' && (
                             <div className="space-y-2">
-                              <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                                <span className="text-3xl">📄</span>
+                              <div className={`flex items-center gap-3 rounded-lg p-3 ${
+                                isOwnMessage ? 'bg-white/10' : 'bg-gray-50'
+                              }`}>
+                                {message.thumbnailMinioPresignedUrl ? (
+                                  <img 
+                                    src={message.thumbnailMinioPresignedUrl} 
+                                    alt="Document preview"
+                                    className="w-12 h-12 rounded object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-3xl">📄</span>
+                                )}
+                                
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium truncate">{message.fileName || 'Document'}</p>
                                   {message.fileSize && (
@@ -1368,6 +1372,7 @@ export default function ChatPage() {
                                     </p>
                                   )}
                                 </div>
+                                
                                 {message.minioPresignedUrl && (
                                   <a 
                                     href={message.minioPresignedUrl} 
@@ -1395,7 +1400,6 @@ export default function ChatPage() {
                                 <div className={`flex items-center gap-2 rounded-2xl p-2 ${
                                   isOwnMessage ? 'bg-white/10' : 'bg-gray-50'
                                 }`}>
-                                  {/* Play/Pause Button */}
                                   <button
                                     onClick={() => handleVoicePlayPause(message.id, message.minioPresignedUrl!)}
                                     className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -1415,10 +1419,9 @@ export default function ChatPage() {
                                     )}
                                   </button>
                                   
-                                  {/* Waveform visualization (simplified bars) */}
                                   <div className="flex-1 flex items-center gap-0.5 h-8">
                                     {[...Array(30)].map((_, i) => {
-                                      const height = Math.random() * 60 + 40 // Random height between 40-100%
+                                      const height = Math.random() * 60 + 40
                                       return (
                                         <div
                                           key={i}
@@ -1435,14 +1438,12 @@ export default function ChatPage() {
                                     })}
                                   </div>
                                   
-                                  {/* Duration */}
                                   <span className={`text-xs flex-shrink-0 ${
                                     isOwnMessage ? 'text-white/80' : 'text-gray-500'
                                   }`}>
-                                    {message.fileSize ? formatDuration(message.fileSize / 1024) : '0:00'}
+                                    {message.duration ? formatDuration(message.duration) : '0:00'}
                                   </span>
                                   
-                                  {/* Hidden audio element for streaming playback */}
                                   <audio
                                     ref={(el) => {
                                       if (el) audioRefs.current.set(message.id, el)
@@ -1471,9 +1472,7 @@ export default function ChatPage() {
                                     <p className={`text-xs ${
                                       isOwnMessage ? 'text-white/70' : 'text-gray-500'
                                     }`}>
-                                      {message.fileSize 
-                                        ? `${(message.fileSize / 1024).toFixed(0)} KB - File not available` 
-                                        : 'File not available'}
+                                      {message.duration ? formatDuration(message.duration) : 'Loading...'}
                                     </p>
                                   </div>
                                 </div>

@@ -131,7 +131,7 @@ public class UpdateHandler {
                         // Fallback: use basic info
                         try {
                             MessageInfo messageInfo = messageMapping.convertToMessageInfo(message);
-                            telegramCacheManager.getMessageHistory().add(messageInfo);
+                            telegramCacheManager.addMessageToHistory(message.chatId, messageInfo);
                             String formattedContent = telegramFormatHelper.formatMessageContent(messageInfo.getContent());
 
                             // Check if message is from current user

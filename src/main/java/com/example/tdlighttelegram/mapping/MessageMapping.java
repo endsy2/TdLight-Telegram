@@ -146,6 +146,13 @@ public class MessageMapping {
             if (user.usernames != null && user.usernames.activeUsernames.length > 0) {
                 messageInfo.setSenderUsername(user.usernames.activeUsernames[0]);
             }
+            
+            // Get user profile photo URL
+            if (user.profilePhoto != null && user.profilePhoto.small != null) {
+                // Create URL to profile photo endpoint
+                String photoUrl = "/api/telegram/media/profile-photos/" + user.id + ".jpg";
+                messageInfo.setSenderPhotoUrl(photoUrl);
+            }
         }
 
         return messageInfo;

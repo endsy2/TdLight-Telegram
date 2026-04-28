@@ -45,11 +45,13 @@ export interface Message {
   chatId: number
   senderId?: number
   senderName?: string
+  senderPhotoUrl?: string
   messageType: 'TEXT' | 'PHOTO' | 'VIDEO' | 'DOCUMENT' | 'AUDIO' | 'VOICE' | 'STICKER' | 'ANIMATION' | 'UNKNOWN'
   content: string
   mediaUrl?: string
   fileName?: string
   fileSize?: number
+  duration?: number // Duration in seconds for video/audio/voice messages
   fileId?: number
   thumbnailFileId?: number
   thumbnailFormat?: string

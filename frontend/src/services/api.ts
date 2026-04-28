@@ -101,9 +101,9 @@ export const messageApi = {
   getMessages: () => api.get<Message[]>('/messages'),
   getGroupMessages: (groupId: number) =>
     api.get<Message[]>(`/groups/${groupId}/messages`),
-  getMessageHistoryByChatId: (chatId: number, limit = 20, fromMessageId?: number) =>
-    api.get<Message[]>(`/message/${chatId}/messages/history`, {
-      params: { limit, fromMessageId },
+  getMessageHistoryByChatId: (chatId: number, limit = 20, fromMessageId?: number, offset = 0) =>
+    api.get<{ messages: Message[], chatId: number, profile: Chat, fromCache: boolean, total: number }>(`/message/${chatId}/messages/history`, {
+      params: { limit, fromMessageId, offset },
     }),
   getLatestMessages: (chatId: number, limit = 10) =>
     api.get(`/chats/${chatId}/messages/latest`, { params: { limit } }),

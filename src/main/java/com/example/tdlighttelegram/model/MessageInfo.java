@@ -21,11 +21,13 @@ public class MessageInfo {
     private Long senderId;
     private String senderName;
     private String senderUsername;
+    private String senderPhotoUrl; // Profile photo URL for message sender
     private String messageType; // TEXT, PHOTO, VIDEO, DOCUMENT, etc.
     private String content;
     private String mediaUrl;
     private String fileName;
     private Long fileSize;
+    private Integer duration; // Duration in seconds for video/audio/voice messages
     private Integer fileId; 
     private String localPath; 
     

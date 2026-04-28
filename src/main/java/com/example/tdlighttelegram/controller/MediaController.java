@@ -74,6 +74,14 @@ public class MediaController {
     }
 
     /**
+     * Serve profile photo files
+     */
+    @GetMapping("/profile-photos/{fileName}")
+    public ResponseEntity<Resource> getProfilePhoto(@PathVariable String fileName) {
+        return serveFile("profile-photos", fileName, "image/jpeg");
+    }
+
+    /**
      * Generic method to serve files with proper headers for streaming
      */
     private ResponseEntity<Resource> serveFile(String category, String fileName, String contentType) {

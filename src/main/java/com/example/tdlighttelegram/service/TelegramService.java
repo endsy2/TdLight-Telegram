@@ -19,15 +19,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -381,6 +384,82 @@ public class TelegramService {
 //        return null;
     }
 
+    /**
+     * Download and cache user profile photo
+     */
+    public CompletableFuture<String> downloadUserProfilePhoto(long userId) {
+        String fileName = userId + ".jpg";
+        Path profilePhotosDir = Paths.get("media-files", "profile-photos");
+        Path filePath = profilePhotosDir.resolve(fileName);
+
+        // Check if already downloaded
+        if (Files.exists(filePath)) {
+            log.debug("Profile photo already exists for user {}", userId);
+            return CompletableFuture.completedFuture("/api/telegram/media/profile-photos/" + fileName);
+        }
+
+        // Create directory if it doesn't exist
+        try {
+            Files.createDirectories(profilePhotosDir);
+        } catch (IOException e) {
+            log.error("Failed to create profile-photos directory", e);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        // Get user info to access profile photo
+        TdApi.GetUser getUserRequest = new TdApi.GetUser();
+        getUserRequest.userId = userId;
+
+        return client.send(getUserRequest)
+                .thenCompose(userResult -> {
+                    if (!(userResult instanceof TdApi.User)) {
+                        log.warn("Failed to get user {} for profile photo", userId);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    TdApi.User user = (TdApi.User) userResult;
+                    if (user.profilePhoto == null || user.profilePhoto.small == null) {
+                        log.debug("User {} has no profile photo", userId);
+                        return CompletableFuture.completedFuture(null);
+                    }
+
+                    // Download the small profile photo
+                    TdApi.DownloadFile downloadRequest = new TdApi.DownloadFile();
+                    downloadRequest.fileId = user.profilePhoto.small.id;
+                    downloadRequest.priority = 1;
+                    downloadRequest.synchronous = true;
+
+                    return client.send(downloadRequest)
+                            .thenApply(downloadResult -> {
+                                if (!(downloadResult instanceof TdApi.File)) {
+                                    log.warn("Failed to download profile photo for user {}", userId);
+                                    return null;
+                                }
+
+                                TdApi.File file = (TdApi.File) downloadResult;
+                                if (file.local == null || file.local.path == null || file.local.path.isEmpty()) {
+                                    log.warn("Profile photo file has no local path for user {}", userId);
+                                    return null;
+                                }
+
+                                // Copy file to our media directory
+                                try {
+                                    Path sourcePath = Paths.get(file.local.path);
+                                    Files.copy(sourcePath, filePath, StandardCopyOption.REPLACE_EXISTING);
+                                    log.info("Profile photo downloaded for user {}: {}", userId, filePath);
+                                    return "/api/telegram/media/profile-photos/" + fileName;
+                                } catch (IOException e) {
+                                    log.error("Failed to copy profile photo for user {}", userId, e);
+                                    return null;
+                                }
+                            });
+                })
+                .exceptionally(throwable -> {
+                    log.error("Error downloading profile photo for user {}", userId, throwable);
+                    return null;
+                });
+    }
+
 
 
 
@@ -533,9 +612,9 @@ public class TelegramService {
     /**
      * Get message history
      */
-    public List<MessageInfo> getMessageHistory() {
-        return new ArrayList<>(telegramCacheManager.getMessageHistory());
-    }
+//    public List<MessageInfo> getMessageHistory() {
+//        return new ArrayList<>(telegramCacheManager.getMessageHistory());
+//    }
 
     /**
      * Get message history for specified group
@@ -551,34 +630,15 @@ public class TelegramService {
      */
     public CompletableFuture<List<MessageInfo>> getMessagesByChatId(Long chatId, int limit, int offset, Long fromMessageId) {
         try {
-//            // First, ensure the chat is loaded
-            TdApi.GetChat getChatRequest = new TdApi.GetChat();
-            getChatRequest.chatId = chatId;
-
-//            TdApi.GetChatHistory getChatRequest = new TdApi.GetChatHistory();
-//            getChatRequest.chatId = chatId;
-
-            return client.send(getChatRequest)
-                    .thenCompose(chatResult -> {
-                        if (!(chatResult instanceof TdApi.Chat)) {
-                            log.warn("Failed to get chat {} before fetching messages", chatId);
-                            return CompletableFuture.completedFuture(new ArrayList<>());
-                        }
-
-                        log.debug("Chat {} loaded successfully, fetching messages...", chatId);
-
-                        // For first request, use longer delay and retry mechanism
-                        if (fromMessageId == null || fromMessageId == 0) {
-                            return fetchMessagesWithRetry(chatId, limit, offset, 0, 3);
-                        } else {
-                            // For subsequent requests, fetch directly
-                            return fetchMessages(chatId, limit, offset, fromMessageId);
-                        }
-                    })
-                    .exceptionally(throwable -> {
-                        log.error("Failed to get chat {} before fetching messages", chatId, throwable);
-                        return new ArrayList<>();
-                    });
+            long messageId = (fromMessageId == null) ? 0 : fromMessageId;
+            
+            // Skip unnecessary GetChat call - TDLib handles chat loading internally
+            // For first request, use retry mechanism for sync issues
+            if (messageId == 0) {
+                return fetchMessagesWithRetry(chatId, limit, offset, 0, 2); // Reduced retries from 3 to 2
+            } else {
+                return fetchMessages(chatId, limit, offset, messageId);
+            }
         } catch (Exception e) {
             log.error("Error getting messages for chat {}", chatId, e);
             return CompletableFuture.completedFuture(new ArrayList<>());
@@ -714,26 +774,16 @@ public class TelegramService {
     private CompletableFuture<List<MessageInfo>> fetchMessagesWithRetry(Long chatId, int limit, int offset, long fromMessageId, int maxRetries) {
         return fetchMessages(chatId, limit, offset, fromMessageId)
                 .thenCompose(messages -> {
-                    // Only retry if:
-                    // 1. We got exactly 1 message
-                    // 2. We requested more than 1
-                    // 3. We have retries left
-                    // 4. This is the first fetch (fromMessageId == 0)
-                    // 
-                    // The key insight: if it's a first fetch and TDLib returns only 1 message
-                    // when we asked for more, it's likely a sync issue, not that the chat
-                    // only has 1 message. After retries, we accept whatever we get.
+                    // Only retry if we got exactly 1 message when requesting more on first fetch
                     if (messages.size() == 1 && limit > 1 && maxRetries > 0 && fromMessageId == 0) {
-                        log.info("Only 1 message returned for chat {} on first fetch, retrying... ({} retries left)", chatId, maxRetries);
-
-                        // Wait 300ms before retry to let TDLib sync
-                        return CompletableFuture.runAsync(() -> {
-                            try {
-                                Thread.sleep(300);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }).thenCompose(v -> fetchMessagesWithRetry(chatId, limit, offset, fromMessageId, maxRetries - 1));
+                        log.debug("Retrying chat {} fetch ({} retries left)", chatId, maxRetries);
+                        
+                        // Non-blocking delay using CompletableFuture
+                        CompletableFuture<Void> delay = new CompletableFuture<>();
+                        CompletableFuture.delayedExecutor(200, TimeUnit.MILLISECONDS)
+                                .execute(() -> delay.complete(null));
+                        
+                        return delay.thenCompose(v -> fetchMessagesWithRetry(chatId, limit, offset, fromMessageId, maxRetries - 1));
                     }
                     return CompletableFuture.completedFuture(messages);
                 });
@@ -750,67 +800,56 @@ public class TelegramService {
         request.offset = offset;
         request.onlyLocal = false;
 
-        if (fromMessageId == 0) {
-            log.info("Fetching latest {} messages from chat {} with offset {}", limit, chatId, offset);
-        } else {
-            log.info("Fetching {} messages from chat {} starting from messageId {} with offset {}", limit, chatId, fromMessageId, offset);
-        }
+        log.debug("Fetching {} messages from chat {} (fromMessageId: {}, offset: {})", limit, chatId, fromMessageId, offset);
 
-        CompletableFuture<List<MessageInfo>> future = new CompletableFuture<>();
-
-        client.send(request)
-                .thenAccept(result -> {
-                    try {
-                        if (result instanceof TdApi.Messages) {
-                            TdApi.Messages messages = (TdApi.Messages) result;
-                            List<MessageInfo> messageInfos = new ArrayList<>();
-
-                            log.info("TDLib returned {} messages for chat {}", messages.messages.length, chatId);
-
-                            if (messages.messages.length == 0) {
-                                log.warn("No messages returned from TDLib for chat {}", chatId);
-                            } else if (messages.messages.length == 1 && limit > 1) {
-                                log.warn("Only 1 message returned when {} were requested for chat {}. Chat may need more sync time.", limit, chatId);
-                            }
-
-                            for (TdApi.Message message : messages.messages) {
-                                try {
-                                    MessageInfo messageInfo = messageMapping.convertToMessageInfo(message);
-                                    messageInfos.add(messageInfo);
-                                } catch (Exception e) {
-                                    log.error("Error converting message {} from chat {}", message.id, chatId, e);
-                                }
-                            }
-
-                            log.info("Successfully converted {} messages from chat {}", messageInfos.size(), chatId);
-                            
-                            // Process media files - download from Telegram and upload to MinIO
-                            processMediaFilesForMessages(messageInfos)
-                                    .thenAccept(v -> {
-                                        log.info("Media processing completed for {} messages", messageInfos.size());
-                                        future.complete(messageInfos);
-                                    })
-                                    .exceptionally(e -> {
-                                        log.error("Error processing media files, returning messages without URLs", e);
-                                        future.complete(messageInfos);
-                                        return null;
-                                    });
-                        } else {
-                            log.warn("Unexpected result type from TDLib: {}", result.getClass().getSimpleName());
-                            future.complete(new ArrayList<>());
-                        }
-                    } catch (Exception e) {
-                        log.error("Error processing messages from chat {}", chatId, e);
-                        future.complete(new ArrayList<>());
+        return client.send(request)
+                .thenCompose(result -> {
+                    if (!(result instanceof TdApi.Messages)) {
+                        log.warn("Unexpected result type from TDLib: {}", result.getClass().getSimpleName());
+                        return CompletableFuture.completedFuture(new ArrayList<>());
                     }
+
+                    TdApi.Messages messages = (TdApi.Messages) result;
+                    
+                    if (messages.messages.length == 0) {
+                        return CompletableFuture.completedFuture(new ArrayList<>());
+                    }
+
+                    log.debug("Converting {} messages from chat {}", messages.messages.length, chatId);
+
+                    // Convert messages in parallel
+                    List<CompletableFuture<MessageInfo>> conversions = new ArrayList<>();
+                    for (TdApi.Message message : messages.messages) {
+                        conversions.add(CompletableFuture.supplyAsync(() -> {
+                            try {
+                                return messageMapping.convertToMessageInfo(message);
+                            } catch (Exception e) {
+                                log.error("Error converting message {} from chat {}", message.id, chatId, e);
+                                return null;
+                            }
+                        }));
+                    }
+
+                    return CompletableFuture.allOf(conversions.toArray(new CompletableFuture[0]))
+                            .thenCompose(v -> {
+                                List<MessageInfo> messageInfos = conversions.stream()
+                                        .map(CompletableFuture::join)
+                                        .filter(Objects::nonNull)
+                                        .collect(Collectors.toList());
+
+                                // Process media files asynchronously
+                                return processMediaFilesForMessages(messageInfos)
+                                        .thenApply(unused -> messageInfos)
+                                        .exceptionally(e -> {
+                                            log.error("Error processing media files for chat {}", chatId, e);
+                                            return messageInfos; // Return messages even if media processing fails
+                                        });
+                            });
                 })
                 .exceptionally(throwable -> {
                     log.error("Failed to get messages for chat {}", chatId, throwable);
-                    future.complete(new ArrayList<>());
-                    return null;
+                    return new ArrayList<>();
                 });
-
-        return future;
     }
 
 
@@ -1165,8 +1204,8 @@ public class TelegramService {
      */
     private void addMessageToCache(MessageInfo messageInfo) {
         try {
-            // Add to message history
-            telegramCacheManager.getMessageHistory().add(messageInfo);
+            // Add to chat-specific message history
+            telegramCacheManager.addMessageToHistory(messageInfo.getChatId(), messageInfo);
 
             // If it's a video message, add to group video message cache
             if ("VIDEO".equals(messageInfo.getMessageType())) {
@@ -4080,13 +4119,28 @@ public class TelegramService {
     }
 
     /**
-     * Process media files for messages - download from Telegram and upload to MinIO
+     * Process media files for messages - download from Telegram and store locally
      */
     private CompletableFuture<Void> processMediaFilesForMessages(List<MessageInfo> messages) {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         
         for (MessageInfo message : messages) {
-            // Skip text messages
+            // Download sender profile photo if available
+            if (message.getSenderId() != null && message.getSenderPhotoUrl() != null) {
+                CompletableFuture<Void> profilePhotoFuture = downloadUserProfilePhoto(message.getSenderId())
+                        .thenAccept(photoUrl -> {
+                            if (photoUrl != null) {
+                                message.setSenderPhotoUrl(photoUrl);
+                            }
+                        })
+                        .exceptionally(e -> {
+                            log.debug("Failed to download profile photo for user {}", message.getSenderId());
+                            return null;
+                        });
+                futures.add(profilePhotoFuture);
+            }
+            
+            // Skip text messages for media processing
             if ("TEXT".equals(message.getMessageType())) {
                 continue;
             }
@@ -4106,7 +4160,7 @@ public class TelegramService {
     }
 
     /**
-     * Process media for a single message
+     * Process media for a single message - download full files
      */
     private void processMessageMedia(MessageInfo message) {
         String messageType = message.getMessageType();
@@ -4307,6 +4361,160 @@ public class TelegramService {
             }
         } catch (Exception e) {
             log.error("Error processing document for message {}", message.getId(), e);
+        }
+    }
+
+    // ==================== LAZY LOADING METHODS (Telegram-style) ====================
+    // These methods only download thumbnails and metadata, NOT full files
+    
+    /**
+     * Process photo thumbnail only (small preview)
+     */
+    private void processPhotoThumbnail(MessageInfo message) {
+        try {
+            TdApi.Message tdMessage = getMessageFromTelegram(message.getChatId(), message.getId());
+            if (!(tdMessage.content instanceof TdApi.MessagePhoto)) {
+                return;
+            }
+            
+            TdApi.MessagePhoto photoMessage = (TdApi.MessagePhoto) tdMessage.content;
+            
+            // Download only the smallest thumbnail (for preview)
+            if (photoMessage.photo.sizes.length > 0) {
+                TdApi.PhotoSize thumbnail = photoMessage.photo.sizes[0]; // Smallest size
+                
+                TdApi.File thumbFile = downloadFileSync(thumbnail.photo.id);
+                if (thumbFile != null && thumbFile.local.isDownloadingCompleted) {
+                    String thumbName = message.getChatId() + "_" + message.getId() + "_thumb.jpg";
+                    String thumbPath = copyToLocalStorage(thumbFile.local.path, "thumbnails", thumbName);
+                    
+                    if (thumbPath != null) {
+                        String thumbUrl = "/api/telegram/media/thumbnails/" + thumbName;
+                        message.setThumbnailMinioPresignedUrl(thumbUrl);
+                    }
+                }
+            }
+            
+            log.debug("Photo thumbnail processed for message {}", message.getId());
+        } catch (Exception e) {
+            log.error("Error processing photo thumbnail for message {}", message.getId(), e);
+        }
+    }
+
+    /**
+     * Process video thumbnail only (NO video download)
+     */
+    private void processVideoThumbnail(MessageInfo message) {
+        try {
+            TdApi.Message tdMessage = getMessageFromTelegram(message.getChatId(), message.getId());
+            if (!(tdMessage.content instanceof TdApi.MessageVideo)) {
+                return;
+            }
+            
+            TdApi.MessageVideo videoMessage = (TdApi.MessageVideo) tdMessage.content;
+            
+            // Download ONLY thumbnail, NOT the video file
+            if (videoMessage.video.thumbnail != null) {
+                TdApi.File thumbFile = downloadFileSync(videoMessage.video.thumbnail.file.id);
+                if (thumbFile != null && thumbFile.local.isDownloadingCompleted) {
+                    String thumbName = message.getChatId() + "_" + message.getId() + "_thumb.jpg";
+                    String thumbPath = copyToLocalStorage(thumbFile.local.path, "thumbnails", thumbName);
+                    
+                    if (thumbPath != null) {
+                        String thumbUrl = "/api/telegram/media/thumbnails/" + thumbName;
+                        message.setThumbnailMinioPresignedUrl(thumbUrl);
+                    }
+                }
+            }
+            
+            // Set video metadata (duration, size, etc.) but DON'T download the file
+            message.setFileSize(videoMessage.video.video.size);
+            message.setDuration(videoMessage.video.duration);
+            
+            log.debug("Video thumbnail processed for message {} (video NOT downloaded)", message.getId());
+        } catch (Exception e) {
+            log.error("Error processing video thumbnail for message {}", message.getId(), e);
+        }
+    }
+
+    /**
+     * Process voice metadata only (NO voice download)
+     */
+    private void processVoiceMetadata(MessageInfo message) {
+        try {
+            TdApi.Message tdMessage = getMessageFromTelegram(message.getChatId(), message.getId());
+            if (!(tdMessage.content instanceof TdApi.MessageVoiceNote)) {
+                return;
+            }
+            
+            TdApi.MessageVoiceNote voiceMessage = (TdApi.MessageVoiceNote) tdMessage.content;
+            
+            // Set metadata only, DON'T download the voice file
+            message.setDuration(voiceMessage.voiceNote.duration);
+            message.setFileSize(voiceMessage.voiceNote.voice.size);
+            
+            log.debug("Voice metadata set for message {} (voice NOT downloaded)", message.getId());
+        } catch (Exception e) {
+            log.error("Error processing voice metadata for message {}", message.getId(), e);
+        }
+    }
+
+    /**
+     * Process audio metadata only (NO audio download)
+     */
+    private void processAudioMetadata(MessageInfo message) {
+        try {
+            TdApi.Message tdMessage = getMessageFromTelegram(message.getChatId(), message.getId());
+            if (!(tdMessage.content instanceof TdApi.MessageAudio)) {
+                return;
+            }
+            
+            TdApi.MessageAudio audioMessage = (TdApi.MessageAudio) tdMessage.content;
+            
+            // Set metadata only, DON'T download the audio file
+            message.setDuration(audioMessage.audio.duration);
+            message.setFileSize(audioMessage.audio.audio.size);
+            message.setFileName(audioMessage.audio.fileName);
+            
+            log.debug("Audio metadata set for message {} (audio NOT downloaded)", message.getId());
+        } catch (Exception e) {
+            log.error("Error processing audio metadata for message {}", message.getId(), e);
+        }
+    }
+
+    /**
+     * Process document thumbnail only (NO document download)
+     */
+    private void processDocumentThumbnail(MessageInfo message) {
+        try {
+            TdApi.Message tdMessage = getMessageFromTelegram(message.getChatId(), message.getId());
+            if (!(tdMessage.content instanceof TdApi.MessageDocument)) {
+                return;
+            }
+            
+            TdApi.MessageDocument docMessage = (TdApi.MessageDocument) tdMessage.content;
+            
+            // Download thumbnail if available
+            if (docMessage.document.thumbnail != null) {
+                TdApi.File thumbFile = downloadFileSync(docMessage.document.thumbnail.file.id);
+                if (thumbFile != null && thumbFile.local.isDownloadingCompleted) {
+                    String thumbName = message.getChatId() + "_" + message.getId() + "_thumb.jpg";
+                    String thumbPath = copyToLocalStorage(thumbFile.local.path, "thumbnails", thumbName);
+                    
+                    if (thumbPath != null) {
+                        String thumbUrl = "/api/telegram/media/thumbnails/" + thumbName;
+                        message.setThumbnailMinioPresignedUrl(thumbUrl);
+                    }
+                }
+            }
+            
+            // Set document metadata, DON'T download the file
+            message.setFileSize(docMessage.document.document.size);
+            message.setFileName(docMessage.document.fileName);
+            
+            log.debug("Document thumbnail processed for message {} (document NOT downloaded)", message.getId());
+        } catch (Exception e) {
+            log.error("Error processing document thumbnail for message {}", message.getId(), e);
         }
     }
 

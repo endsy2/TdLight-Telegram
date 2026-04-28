@@ -26,9 +26,9 @@ public class TelegramCacheManager {
     @Getter
     private final ConcurrentHashMap<Long, UserInfo> userInfoCache = new ConcurrentHashMap<>();
 
-    // Message history cache
+    // Message history cache by chat ID
     @Getter
-    private final List<MessageInfo> messageHistory = new ArrayList<>();
+    private final ConcurrentHashMap<Long, List<MessageInfo>> messageHistoryCache = new ConcurrentHashMap<>();
 
     // Video messages cache by group ID
     @Getter
@@ -59,12 +59,43 @@ public class TelegramCacheManager {
     private final ConcurrentHashMap<Long, TdApi.Chat> tdChatCache = new ConcurrentHashMap<>();
 
     /**
-     * Add message to history
+     * Add message to history for specific chat
      */
-    public synchronized void addMessageToHistory(MessageInfo messageInfo) {
-        messageHistory.add(messageInfo);
+    public synchronized void addMessageToHistory(Long chatId, MessageInfo messageInfo) {
+        messageHistoryCache.computeIfAbsent(chatId, k -> new ArrayList<>()).add(messageInfo);
         log.debug("Message added to history: messageId={}, chatId={}", 
             messageInfo.getId(), messageInfo.getChatId());
+    }
+
+    /**
+     * Add message to history (legacy method for backward compatibility)
+     */
+    public synchronized void addMessageToHistory(MessageInfo messageInfo) {
+        addMessageToHistory(messageInfo.getChatId(), messageInfo);
+    }
+
+    /**
+     * Get message history for specific chat
+     */
+    public List<MessageInfo> getMessageHistory(Long chatId) {
+        return messageHistoryCache.getOrDefault(chatId, new ArrayList<>());
+    }
+
+    /**
+     * Get all message history (flattened from all chats)
+     */
+    public List<MessageInfo> getMessageHistory() {
+        List<MessageInfo> allMessages = new ArrayList<>();
+        messageHistoryCache.values().forEach(allMessages::addAll);
+        return allMessages;
+    }
+
+    /**
+     * Clear message history for specific chat
+     */
+    public void clearMessageHistory(Long chatId) {
+        messageHistoryCache.remove(chatId);
+        log.debug("Message history cleared for chat: {}", chatId);
     }
 
     /**
@@ -103,7 +134,7 @@ public class TelegramCacheManager {
     public void clearAllCaches() {
         groupInfoCache.clear();
         userInfoCache.clear();
-        messageHistory.clear();
+        messageHistoryCache.clear();
         groupVideoMessagesCache.clear();
         downloadCache.clear();
         groupMembersCache.clear();

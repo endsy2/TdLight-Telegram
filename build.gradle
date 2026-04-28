@@ -1,20 +1,16 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0'
+    id 'org.springframework.boot' version '4.0.6'
     id 'io.spring.dependency-management' version '1.1.7'
 }
-group = "com.yingqiang.tdlight"
-version = "0.0.1-SNAPSHOT"
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'Td-Light-Telegram'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
     }
 }
 
@@ -24,42 +20,42 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-websocket")
-    implementation("org.springframework.boot:spring-boot-configuration-processor")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // Java annotations (for Java 11+)
-    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
 
     // TDLight Java
-    implementation(platform("it.tdlight:tdlight-java-bom:3.4.0+td.1.8.26"))
-    implementation("it.tdlight:tdlight-java")
+    implementation platform('it.tdlight:tdlight-java-bom:3.4.0+td.1.8.26')
+    implementation 'it.tdlight:tdlight-java'
 
     implementation group: 'it.tdlight', name: 'tdlight-natives', classifier: 'windows_amd64'
 
     // MinIO Client
-    implementation("io.minio:minio:8.5.7")
+    implementation 'io.minio:minio:8.5.7'
 
     // Lombok
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
     // JSON processing
-    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // Logging
-    implementation("org.slf4j:slf4j-api")
+    implementation 'org.slf4j:slf4j-api'
 
     // Micrometer for metrics (Prometheus)
-    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // Test
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.withType(Test).configureEach {
+tasks.named('test') {
     useJUnitPlatform()
 }

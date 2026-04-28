@@ -3,6 +3,7 @@ package com.example.tdlighttelegram.controller;
 import com.example.tdlighttelegram.mapping.MessageMapping;
 import com.example.tdlighttelegram.model.*;
 import com.example.tdlighttelegram.service.CallService;
+import com.example.tdlighttelegram.service.ChatService;
 import com.example.tdlighttelegram.service.TelegramService;
 import com.example.tdlighttelegram.service.shared.TelegramCacheManager;
 import com.example.tdlighttelegram.util.TelegramUtil;
@@ -30,6 +31,7 @@ public class TelegramController {
     
     private final TelegramService telegramService;
     private final CallService callService;
+    private final ChatService chatService;
     private final TelegramUtil telegramUtil;
     private final TelegramCacheManager telegramCacheManager;
     private final MessageMapping messageMapping;
@@ -102,25 +104,78 @@ public class TelegramController {
     }
 
     /**
-     * Get message history for a specific group (from Telegram server)
+     * Get message history for a specific chat (with pagination and caching)
+     * Cache is only used for initial load (fromMessageId == null)
      */
     @GetMapping("/message/{chatId}/messages/history")
-    public ResponseEntity<List<MessageInfo>> getMessageHistoryByChatId(
+    public ResponseEntity<Map<String, Object>> getMessageHistoryByChatId(
             @PathVariable Long chatId,
             @RequestParam(defaultValue = "20") int limit,
-            @RequestParam(defaultValue = "0")  int offset,
-            @RequestParam(required = false) Long fromMessageId) {
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(required = false) Long fromMessageId,
+            @RequestParam(defaultValue = "false") boolean forceRefresh) {
         try {
-            if(!telegramCacheManager.getMessageHistory().isEmpty()){
-                return ResponseEntity.ok(telegramCacheManager.getMessageHistory());
+            log.debug("Fetching message history for chat {}: limit={}, offset={}, fromMessageId={}, forceRefresh={}",
+                    chatId, limit, offset, fromMessageId, forceRefresh);
+
+            // Validate parameters
+            if (limit <= 0 || limit > 100) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Limit must be between 1 and 100"));
             }
+
+            // Fetch chat profile information
+            ChatInfo chatProfile = chatService.getChatInfo(chatId)
+                    .get(10, TimeUnit.SECONDS);
+
+            // Use cache only for initial load without pagination
+            if (!forceRefresh && fromMessageId == null && offset == 0) {
+                List<MessageInfo> cachedMessages = telegramCacheManager.getMessageHistory(chatId);
+                if (!cachedMessages.isEmpty()) {
+                    log.debug("Returning {} cached messages for chat {}", cachedMessages.size(), chatId);
+                    return ResponseEntity.ok(Map.of(
+                            "messages", cachedMessages.stream().limit(limit).toList(),
+                            "chatId", chatId,
+                            "profile", chatProfile != null ? chatProfile : Map.of(),
+                            "fromCache", true,
+                            "total", cachedMessages.size()
+                    ));
+                }
+            }
+
+            // Fetch from Telegram
             List<MessageInfo> messages = telegramService.getMessagesByChatId(chatId, limit, offset, fromMessageId)
                     .get(30, TimeUnit.SECONDS);
-            messages.forEach(telegramCacheManager::addMessageToHistory);
-            return ResponseEntity.ok(messages);
+
+            // Cache messages only for initial load
+            if (fromMessageId == null && offset == 0) {
+                telegramCacheManager.clearMessageHistory(chatId);
+                messages.forEach(msg -> telegramCacheManager.addMessageToHistory(chatId, msg));
+                log.debug("Cached {} messages for chat {}", messages.size(), chatId);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "messages", messages,
+                    "chatId", chatId,
+                    "profile", chatProfile != null ? chatProfile : Map.of(),
+                    "fromCache", false,
+                    "total", messages.size()
+            ));
+
+        } catch (ExecutionException e) {
+            log.error("Error getting message history for chat {}: {}", chatId, e.getCause().getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of(
+                            "error", "Failed to fetch messages: " + e.getCause().getMessage(),
+                            "chatId", chatId
+                    ));
         } catch (Exception e) {
-            log.error("Error getting group message history for chat Id {}", chatId, e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Unexpected error getting message history for chat {}", chatId, e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of(
+                            "error", "Failed to fetch messages: " + e.getMessage(),
+                            "chatId", chatId
+                    ));
         }
     }
     /**
