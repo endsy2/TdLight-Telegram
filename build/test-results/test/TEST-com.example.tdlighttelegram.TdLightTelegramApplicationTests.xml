@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.tdlighttelegram.TdLightTelegramApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-04-28T13:39:54.488Z" hostname="CHIN_KONG_MING" time="5.129">
+  <properties/>
+  <testcase name="contextLoads()" classname="com.example.tdlighttelegram.TdLightTelegramApplicationTests" time="0.549"/>
+  <system-out><![CDATA[20:39:54.707 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.tdlighttelegram.TdLightTelegramApplicationTests]: TdLightTelegramApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+20:39:54.814 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.tdlighttelegram.TdLightTelegramApplication for test class com.example.tdlighttelegram.TdLightTelegramApplicationTests
+20:39:54.911 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.tdlighttelegram.TdLightTelegramApplicationTests]: TdLightTelegramApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+20:39:54.912 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.tdlighttelegram.TdLightTelegramApplication for test class com.example.tdlighttelegram.TdLightTelegramApplicationTests
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.6)
+
+2026-04-28 20:39:55.288 [Test worker] INFO  c.e.t.TdLightTelegramApplicationTests - Starting TdLightTelegramApplicationTests using Java 21.0.9 with PID 19700 (started by kongm in D:\APD Backend Work\Td-Light-Telegram)
+2026-04-28 20:39:55.289 [Test worker] DEBUG c.e.t.TdLightTelegramApplicationTests - Running with Spring Boot v4.0.6, Spring v7.0.7
+2026-04-28 20:39:55.289 [Test worker] INFO  c.e.t.TdLightTelegramApplicationTests - The following 1 profile is active: "dev"
+2026-04-28 20:39:57.021 [Test worker] INFO  c.e.t.config.TelegramConfig - TDLight initialized successfully
+2026-04-28 20:39:57.194 [Test worker] INFO  c.e.t.service.TelegramService - Initializing Telegram client...
+2026-04-28 20:39:57.229 [Test worker] DEBUG c.e.t.s.s.TelegramClientProvider - Telegram client instance set
+2026-04-28 20:39:57.230 [Test worker] INFO  c.e.t.service.TelegramService - Telegram client initialized successfully - waiting for phone number via API
+2026-04-28 20:39:57.230 [Test worker] INFO  c.e.t.service.TelegramService - Please use POST /api/telegram/auth/phone to submit phone number
+2026-04-28 20:39:57.357 [TDLib thread] INFO  c.e.t.handler.UpdateHandler - Waiting for phone number...
+2026-04-28 20:39:57.357 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: WAITING_FOR_PHONE
+2026-04-28 20:39:57.358 [TDLib thread] WARN  i.t.client.SimpleTelegramClient - Unhandled exception!
+it.tdlight.client.TelegramError: 400: Phone number must be non-empty
+	at it.tdlight.client.AuthorizationStateWaitAuthenticationDataHandler.lambda$onAuthData$3(AuthorizationStateWaitAuthenticationDataHandler.java:66)
+	at it.tdlight.InternalClient.handleResponse(InternalClient.java:99)
+	at it.tdlight.InternalClient.handleEvent(InternalClient.java:117)
+	at it.tdlight.InternalClient.handleEvents(InternalClient.java:71)
+	at it.tdlight.ClientFactoryImpl.handleClientEvents(ClientFactoryImpl.java:87)
+	at it.tdlight.ResponseReceiver.run(ResponseReceiver.java:113)
+2026-04-28 20:39:58.847 [Test worker] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 4 endpoints beneath base path '/actuator'
+2026-04-28 20:39:58.942 [Test worker] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2026-04-28 20:39:58.943 [Test worker] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@7ca0b05e]]
+2026-04-28 20:39:58.945 [Test worker] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2026-04-28 20:39:58.955 [Test worker] INFO  c.e.t.TdLightTelegramApplicationTests - Started TdLightTelegramApplicationTests in 3.996 seconds (process running for 5.377)
+]]></system-out>
+  <system-err><![CDATA[Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\kongm\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.17.8\f09415827a71be7ed621c7bd02550678f28bc81c\byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

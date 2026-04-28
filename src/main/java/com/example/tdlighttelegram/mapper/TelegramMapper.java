@@ -2,7 +2,12 @@ package com.example.tdlighttelegram.mapper;
 
 import com.example.tdlighttelegram.model.ChatInfo;
 import com.example.tdlighttelegram.model.*;
+import com.example.tdlighttelegram.service.shared.TelegramCacheManager;
+import it.tdlight.client.SimpleTelegramClient;
 import it.tdlight.jni.TdApi;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -12,8 +17,13 @@ import java.time.ZoneId;
  * Telegram Mapper
  * Maps TdApi objects from Telegram server to DTO response objects
  */
+@Slf4j
+@Component
+@RequiredArgsConstructor
 public class TelegramMapper {
 
+    private static SimpleTelegramClient client;
+    private final TelegramCacheManager telegramCacheManager;
     /**
      * Map TdApi.Chat to ChatInfo
      */
@@ -49,6 +59,28 @@ public class TelegramMapper {
                     ZoneId.systemDefault()
             );
         }
+        log.info("profile url:{}",chat.photo.small);
+
+        client.send(
+                new TdApi.DownloadFile(
+                        chat.photo.big.id,
+                        1,
+                        0,
+                        0,
+                        true
+                ),
+                result -> {
+                    if (result.isError()) {
+                        System.out.println("Download failed: " + result.getError());
+                        return;
+                    }
+
+                    TdApi.File file = result.get();
+
+                    String path = file.local.path;
+                    System.out.println("Downloaded to: " + path);
+                }
+        );
 
         return ChatInfo.builder()
                 .id(chat.id)

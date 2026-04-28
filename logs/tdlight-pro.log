@@ -1,0 +1,136 @@
+2026-04-27 08:46:55.833 [main] INFO  c.e.t.TdLightTelegramApplication - Starting TdLightTelegramApplication using Java 21.0.9 with PID 12700 (D:\APD Backend Work\Td-Light-Telegram\build\classes\java\main started by kongm in D:\APD Backend Work\Td-Light-Telegram)
+2026-04-27 08:46:55.836 [main] DEBUG c.e.t.TdLightTelegramApplication - Running with Spring Boot v3.5.0, Spring v6.2.7
+2026-04-27 08:46:55.837 [main] INFO  c.e.t.TdLightTelegramApplication - No active profile set, falling back to 1 default profile: "default"
+2026-04-27 08:46:57.402 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-27 08:46:57.418 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-27 08:46:57.418 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.41]
+2026-04-27 08:46:57.490 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-27 08:46:57.491 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1609 ms
+2026-04-27 08:46:59.275 [main] INFO  c.e.t.config.TelegramConfig - TDLight initialized successfully
+2026-04-27 08:46:59.404 [main] INFO  c.e.t.service.TelegramService - Initializing Telegram client...
+2026-04-27 08:46:59.435 [main] INFO  it.tdlight.TelegramClient - Registered new client 1
+2026-04-27 08:46:59.437 [main] DEBUG c.e.t.s.s.TelegramClientProvider - Telegram client instance set
+2026-04-27 08:46:59.437 [main] INFO  c.e.t.service.TelegramService - Telegram client initialized successfully - waiting for phone number via API
+2026-04-27 08:46:59.437 [main] INFO  c.e.t.service.TelegramService - Please use POST /api/telegram/auth/phone to submit phone number
+2026-04-27 08:46:59.486 [TDLib thread] INFO  c.e.t.service.TelegramService - Waiting for phone number...
+2026-04-27 08:46:59.486 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: WAITING_FOR_PHONE
+2026-04-27 08:46:59.487 [TDLib thread] WARN  i.t.client.SimpleTelegramClient - Unhandled exception!
+it.tdlight.client.TelegramError: 400: Phone number must be non-empty
+	at it.tdlight.client.AuthorizationStateWaitAuthenticationDataHandler.lambda$onAuthData$3(AuthorizationStateWaitAuthenticationDataHandler.java:66)
+	at it.tdlight.InternalClient.handleResponse(InternalClient.java:99)
+	at it.tdlight.InternalClient.handleEvent(InternalClient.java:117)
+	at it.tdlight.InternalClient.handleEvents(InternalClient.java:71)
+	at it.tdlight.ClientFactoryImpl.handleClientEvents(ClientFactoryImpl.java:87)
+	at it.tdlight.ResponseReceiver.run(ResponseReceiver.java:113)
+2026-04-27 08:46:59.684 [main] WARN  o.s.w.s.m.m.a.RequestMappingHandlerMapping - Multiple @RequestMapping annotations found on public org.springframework.http.ResponseEntity com.example.tdlighttelegram.controller.TelegramController.closeChat(java.lang.Long), but only the first will be used: [@org.springframework.web.bind.annotation.GetMapping(consumes={}, headers={}, name="", params={}, path={}, produces={}, value={}), @org.springframework.web.bind.annotation.PostMapping(consumes={}, headers={}, name="", params={}, path={"/chats/{chatId}/close"}, produces={}, value={"/chats/{chatId}/close"})]
+2026-04-27 08:47:00.065 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-04-27 08:47:00.119 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2026-04-27 08:47:00.120 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@52d181ed]]
+2026-04-27 08:47:00.121 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2026-04-27 08:47:00.142 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-27 08:47:00.153 [main] INFO  c.e.t.TdLightTelegramApplication - Started TdLightTelegramApplication in 4.99 seconds (process running for 6.722)
+2026-04-27 08:47:00.816 [RMI TCP Connection(6)-172.19.64.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-27 08:47:00.816 [RMI TCP Connection(6)-172.19.64.1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-27 08:47:00.818 [RMI TCP Connection(6)-172.19.64.1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-04-27 08:48:00.095 [MessageBroker-1] INFO  o.s.w.s.c.WebSocketMessageBrokerStats - WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2026-04-27 08:50:43.108 [TDLib thread] INFO  c.e.t.service.TelegramService - Telegram client is closing...
+2026-04-27 08:50:43.108 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: CLOSING
+2026-04-27 08:50:43.117 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-27 08:50:43.127 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-27 08:50:43.128 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopping...
+2026-04-27 08:50:43.130 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@52d181ed]]
+2026-04-27 08:50:43.130 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopped.
+2026-04-27 08:50:43.189 [TDLib thread] INFO  c.e.t.service.TelegramService - Telegram client is closed
+2026-04-27 08:50:43.189 [SpringApplicationShutdownHook] INFO  c.e.t.service.TelegramService - Telegram client closed successfully
+2026-04-27 08:50:43.189 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: CLOSED
+2026-04-27 08:50:45.199 [SpringApplicationShutdownHook] INFO  c.e.t.config.TelegramConfig - TelegramClientFactory closed successfully
+2026-04-27 08:50:47.659 [main] INFO  c.e.t.TdLightTelegramApplication - Starting TdLightTelegramApplication using Java 21.0.9 with PID 22864 (D:\APD Backend Work\Td-Light-Telegram\build\classes\java\main started by kongm in D:\APD Backend Work\Td-Light-Telegram)
+2026-04-27 08:50:47.659 [main] DEBUG c.e.t.TdLightTelegramApplication - Running with Spring Boot v3.5.0, Spring v6.2.7
+2026-04-27 08:50:47.659 [main] INFO  c.e.t.TdLightTelegramApplication - No active profile set, falling back to 1 default profile: "default"
+2026-04-27 08:50:48.539 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-27 08:50:48.547 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-27 08:50:48.549 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.41]
+2026-04-27 08:50:48.591 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-27 08:50:48.591 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 898 ms
+2026-04-27 08:50:49.230 [main] INFO  c.e.t.config.TelegramConfig - TDLight initialized successfully
+2026-04-27 08:50:49.297 [main] INFO  c.e.t.service.TelegramService - Initializing Telegram client...
+2026-04-27 08:50:49.311 [main] INFO  it.tdlight.TelegramClient - Registered new client 1
+2026-04-27 08:50:49.313 [main] DEBUG c.e.t.s.s.TelegramClientProvider - Telegram client instance set
+2026-04-27 08:50:49.313 [main] INFO  c.e.t.service.TelegramService - Telegram client initialized successfully - waiting for phone number via API
+2026-04-27 08:50:49.313 [main] INFO  c.e.t.service.TelegramService - Please use POST /api/telegram/auth/phone to submit phone number
+2026-04-27 08:50:49.402 [TDLib thread] INFO  c.e.t.service.TelegramService - Waiting for phone number...
+2026-04-27 08:50:49.402 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: WAITING_FOR_PHONE
+2026-04-27 08:50:49.402 [TDLib thread] WARN  i.t.client.SimpleTelegramClient - Unhandled exception!
+it.tdlight.client.TelegramError: 400: Phone number must be non-empty
+	at it.tdlight.client.AuthorizationStateWaitAuthenticationDataHandler.lambda$onAuthData$3(AuthorizationStateWaitAuthenticationDataHandler.java:66)
+	at it.tdlight.InternalClient.handleResponse(InternalClient.java:99)
+	at it.tdlight.InternalClient.handleEvent(InternalClient.java:117)
+	at it.tdlight.InternalClient.handleEvents(InternalClient.java:71)
+	at it.tdlight.ClientFactoryImpl.handleClientEvents(ClientFactoryImpl.java:87)
+	at it.tdlight.ResponseReceiver.run(ResponseReceiver.java:113)
+2026-04-27 08:50:49.451 [main] WARN  o.s.w.s.m.m.a.RequestMappingHandlerMapping - Multiple @RequestMapping annotations found on public org.springframework.http.ResponseEntity com.example.tdlighttelegram.controller.TelegramController.closeChat(java.lang.Long), but only the first will be used: [@org.springframework.web.bind.annotation.GetMapping(consumes={}, headers={}, name="", params={}, path={}, produces={}, value={}), @org.springframework.web.bind.annotation.PostMapping(consumes={}, headers={}, name="", params={}, path={"/chats/{chatId}/close"}, produces={}, value={"/chats/{chatId}/close"})]
+2026-04-27 08:50:49.710 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-04-27 08:50:49.750 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2026-04-27 08:50:49.750 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2552181d]]
+2026-04-27 08:50:49.751 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2026-04-27 08:50:49.767 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-27 08:50:49.776 [main] INFO  c.e.t.TdLightTelegramApplication - Started TdLightTelegramApplication in 2.502 seconds (process running for 3.002)
+2026-04-27 08:50:50.085 [RMI TCP Connection(2)-172.19.64.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-27 08:50:50.085 [RMI TCP Connection(2)-172.19.64.1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-27 08:50:50.087 [RMI TCP Connection(2)-172.19.64.1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-27 08:51:20.479 [TDLib thread] INFO  c.e.t.service.TelegramService - Telegram client is closing...
+2026-04-27 08:51:20.479 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: CLOSING
+2026-04-27 08:51:20.481 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-27 08:51:20.490 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-27 08:51:20.492 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopping...
+2026-04-27 08:51:20.492 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2552181d]]
+2026-04-27 08:51:20.492 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopped.
+2026-04-27 08:51:20.545 [TDLib thread] INFO  c.e.t.service.TelegramService - Telegram client is closed
+2026-04-27 08:51:20.545 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: CLOSED
+2026-04-27 08:51:20.545 [SpringApplicationShutdownHook] INFO  c.e.t.service.TelegramService - Telegram client closed successfully
+2026-04-27 08:51:22.558 [SpringApplicationShutdownHook] INFO  c.e.t.config.TelegramConfig - TelegramClientFactory closed successfully
+2026-04-27 08:51:24.644 [main] INFO  c.e.t.TdLightTelegramApplication - Starting TdLightTelegramApplication using Java 21.0.9 with PID 20284 (D:\APD Backend Work\Td-Light-Telegram\build\classes\java\main started by kongm in D:\APD Backend Work\Td-Light-Telegram)
+2026-04-27 08:51:24.646 [main] DEBUG c.e.t.TdLightTelegramApplication - Running with Spring Boot v3.5.0, Spring v6.2.7
+2026-04-27 08:51:24.646 [main] INFO  c.e.t.TdLightTelegramApplication - No active profile set, falling back to 1 default profile: "default"
+2026-04-27 08:51:25.479 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-04-27 08:51:25.489 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-04-27 08:51:25.489 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.41]
+2026-04-27 08:51:25.531 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-04-27 08:51:25.531 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 855 ms
+2026-04-27 08:51:26.163 [main] INFO  c.e.t.config.TelegramConfig - TDLight initialized successfully
+2026-04-27 08:51:26.227 [main] INFO  c.e.t.service.TelegramService - Initializing Telegram client...
+2026-04-27 08:51:26.240 [main] INFO  it.tdlight.TelegramClient - Registered new client 1
+2026-04-27 08:51:26.242 [main] DEBUG c.e.t.s.s.TelegramClientProvider - Telegram client instance set
+2026-04-27 08:51:26.242 [main] INFO  c.e.t.service.TelegramService - Telegram client initialized successfully - waiting for phone number via API
+2026-04-27 08:51:26.242 [main] INFO  c.e.t.service.TelegramService - Please use POST /api/telegram/auth/phone to submit phone number
+2026-04-27 08:51:26.331 [TDLib thread] INFO  c.e.t.service.TelegramService - Waiting for phone number...
+2026-04-27 08:51:26.331 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: WAITING_FOR_PHONE
+2026-04-27 08:51:26.331 [TDLib thread] WARN  i.t.client.SimpleTelegramClient - Unhandled exception!
+it.tdlight.client.TelegramError: 400: Phone number must be non-empty
+	at it.tdlight.client.AuthorizationStateWaitAuthenticationDataHandler.lambda$onAuthData$3(AuthorizationStateWaitAuthenticationDataHandler.java:66)
+	at it.tdlight.InternalClient.handleResponse(InternalClient.java:99)
+	at it.tdlight.InternalClient.handleEvent(InternalClient.java:117)
+	at it.tdlight.InternalClient.handleEvents(InternalClient.java:71)
+	at it.tdlight.ClientFactoryImpl.handleClientEvents(ClientFactoryImpl.java:87)
+	at it.tdlight.ResponseReceiver.run(ResponseReceiver.java:113)
+2026-04-27 08:51:26.372 [main] WARN  o.s.w.s.m.m.a.RequestMappingHandlerMapping - Multiple @RequestMapping annotations found on public org.springframework.http.ResponseEntity com.example.tdlighttelegram.controller.TelegramController.closeChat(java.lang.Long), but only the first will be used: [@org.springframework.web.bind.annotation.GetMapping(consumes={}, headers={}, name="", params={}, path={}, produces={}, value={}), @org.springframework.web.bind.annotation.PostMapping(consumes={}, headers={}, name="", params={}, path={"/chats/{chatId}/close"}, produces={}, value={"/chats/{chatId}/close"})]
+2026-04-27 08:51:26.616 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2026-04-27 08:51:26.646 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2026-04-27 08:51:26.647 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@6e612122]]
+2026-04-27 08:51:26.648 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2026-04-27 08:51:26.660 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-04-27 08:51:26.668 [main] INFO  c.e.t.TdLightTelegramApplication - Started TdLightTelegramApplication in 2.465 seconds (process running for 2.971)
+2026-04-27 08:51:26.952 [RMI TCP Connection(2)-172.19.64.1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-27 08:51:26.952 [RMI TCP Connection(2)-172.19.64.1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-04-27 08:51:26.953 [RMI TCP Connection(2)-172.19.64.1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-04-27 08:51:46.571 [TDLib thread] INFO  c.e.t.service.TelegramService - Telegram client is closing...
+2026-04-27 08:51:46.571 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: CLOSING
+2026-04-27 08:51:46.575 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-04-27 08:51:46.583 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-04-27 08:51:46.584 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopping...
+2026-04-27 08:51:46.584 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@6e612122]]
+2026-04-27 08:51:46.584 [SpringApplicationShutdownHook] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopped.
+2026-04-27 08:51:46.653 [TDLib thread] INFO  c.e.t.service.TelegramService - Telegram client is closed
+2026-04-27 08:51:46.653 [SpringApplicationShutdownHook] INFO  c.e.t.service.TelegramService - Telegram client closed successfully
+2026-04-27 08:51:46.653 [TDLib thread] INFO  c.e.t.service.AuthenticationService - Authentication state changed to: CLOSED
+2026-04-27 08:51:48.654 [SpringApplicationShutdownHook] INFO  c.e.t.config.TelegramConfig - TelegramClientFactory closed successfully
