@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: Td-Light-Telegram
+  datasource:
+    username:
+  profiles:
+    active: dev
+
+telegram:
+  api-id: ${TELEGRAM_API_ID:34701940}
+  api-hash: ${TELEGRAM_API_HASH:e7ed4d55e0bccab37b69c02eb6c7ca9f}
+  phone-number: ${TELEGRAM_PHONE:+85589826578}
+  use-test-datacenter: false
+  session-path: /app/tdlight-session
+  database-path: /app/tdlight-data
+  downloads-path: /app/tdlight-downloads
+  system-language-code: zh-CN
+  device-model: Desktop
+  system-version: Linux
+  application-version: 1.0.0
+  enable-storage-optimizer: true
+  ignore-file-names: false
+logging:
+  level:
+
+    com.example.tdlighttelegram: DEBUG
+
+    it.tdlight: INFO
+
+    org.springframework: INFO
+
+    root: INFO
+
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+
+  file:
+    name: logs/tdlight-pro.log
+    max-size: 10MB
+    max-history: 30
